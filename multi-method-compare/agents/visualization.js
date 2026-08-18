@@ -1,0 +1,1 @@
+export async function visualizationAgent(x,y){const t0=performance.now(); return {value:{x:Math.max(-1,Math.min(1,x)),y:Math.max(-1,Math.min(1,y))},initMs:0,inferMs:performance.now()-t0,model:'JavaScript Canvas/UI',status:'real'};}

@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Realtime Speech AI - 4 Method Comparator</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">MULTI-AGENT COMPARISON WORKBENCH</p>
+        <h1>同じ発話を4方式で並列分析</h1>
+        <p class="lead">1つのマイク入力を4つの処理方式へ同時配信し、各Agent/Nodeのモデル、処理時間、2次元座標、総遅延を比較します。</p>
+      </div>
+      <div class="controls">
+        <button id="startBtn">録音開始</button>
+        <button id="stopBtn" disabled>停止</button>
+        <button id="demoBtn" class="secondary">デモ文で実行</button>
+      </div>
+    </header>
+
+    <section class="settings card">
+      <div class="setting-grid">
+        <label>チャンク長（秒）<input id="chunkSec" type="number" min="2" max="15" value="5"></label>
+        <label>LLM Proxy Endpoint<input id="llmEndpoint" type="url" placeholder="https://your-proxy.example/analyze"></label>
+        <label>Gemma Endpoint<input id="gemmaEndpoint" type="url" placeholder="https://your-server.example/gemma"></label>
+      </div>
+      <p class="hint">GitHub PagesにAPIキーは保存しません。LLM/Gemmaは任意の安全なProxy/推論サーバーへ接続し、未設定時はローカルの説明可能なフォールバック分類で動作します。</p>
+    </section>
+
+    <section class="live card">
+      <div>
+        <span class="label">共通入力</span>
+        <p id="inputText" class="transcript">まだ入力がありません。</p>
+      </div>
+      <div class="statusline">
+        <span id="recordingBadge" class="badge">停止中</span>
+        <span id="chunkBadge" class="badge muted">chunk 0</span>
+      </div>
+    </section>
+
+    <section id="methodGrid" class="method-grid"></section>
+
+    <section class="card">
+      <div class="section-head"><div><span class="label">構成表</span><h2>4方式で使う Agent / Model</h2></div></div>
+      <div class="table-wrap"><table><thead><tr><th>方式</th><th>Node / Agent</th><th>実装</th><th>役割</th></tr></thead><tbody>
+        <tr><td rowspan="4">1. 現在版</td><td>Speech Agent</td><td>Web Speech API</td><td>リアルタイム文字起こし</td></tr>
+        <tr><td>Semantic Agent</td><td>Multilingual MiniLM</td><td>意味Embedding</td></tr>
+        <tr><td>Mapping Agent</td><td>Cosine anchor mapping</td><td>2軸へ座標化</td></tr>
+        <tr><td>Visualization Agent</td><td>JavaScript</td><td>2D表示</td></tr>
+        <tr><td rowspan="5">2. 階層型</td><td>Speech Agent</td><td>Whisper tiny</td><td>音声→文字</td></tr>
+        <tr><td>Meaning Agent</td><td>MiniLM</td><td>発話の意味Embedding</td></tr>
+        <tr><td>Emotion Agent</td><td>Multilingual BERT sentiment</td><td>感情強度</td></tr>
+        <tr><td>Science Inquiry Agent</td><td>GPT via proxy</td><td>科学的探究の解釈</td></tr>
+        <tr><td>Visualization Agent</td><td>JavaScript</td><td>2D表示</td></tr>
+        <tr><td rowspan="5">3. 機能分担</td><td>Speech Agent</td><td>Whisper tiny</td><td>音声→文字</td></tr>
+        <tr><td>Emotion Agent</td><td>小型Transformer</td><td>感情判定</td></tr>
+        <tr><td>Inquiry Agent</td><td>GPT via proxy</td><td>問い・仮説・検証</td></tr>
+        <tr><td>Movement Agent</td><td>MediaPipe Pose</td><td>身体活動</td></tr>
+        <tr><td>Visualization Agent</td><td>JavaScript</td><td>2D表示</td></tr>
+        <tr><td rowspan="7">4. 異種モデル統合</td><td>Speech Agent</td><td>Whisper tiny</td><td>音声→文字</td></tr>
+        <tr><td>Emotion Agent</td><td>RoBERTa sentiment</td><td>感情判定</td></tr>
+        <tr><td>Inquiry Agent</td><td>GPT via proxy</td><td>探究判定</td></tr>
+        <tr><td>Science Concept Agent</td><td>Gemma endpoint</td><td>科学概念抽出</td></tr>
+        <tr><td>Embedding Agent</td><td>multilingual-E5-small</td><td>意味Embedding</td></tr>
+        <tr><td>Integration Agent</td><td>GPT via proxy</td><td>結果統合・2D座標生成</td></tr>
+        <tr><td>Visualization Agent</td><td>JavaScript</td><td>2D表示</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <div><span class="label">比較表</span><h2>Agent / Node ごとの実測時間</h2></div>
+        <button id="csvBtn" class="secondary">CSV保存</button>
+      </div>
+      <div class="table-wrap"><table id="timingTable"><thead><tr><th>方式</th><th>Node / Agent</th><th>モデル / 手法</th><th>実行状態</th><th>初期化 ms</th><th>推論 ms</th><th>出力概要</th></tr></thead><tbody></tbody></table></div>
+    </section>
+
+    <section class="card notes">
+      <span class="label">設計上の注意</span>
+      <p>方式2〜4のWhisper、Embedding、感情モデルはTransformers.jsでブラウザ推論できるAdapterを用意しています。端末性能やモデル互換性により失敗した場合はフォールバックへ自動切替し、その状態を表に明示します。方式3のMovement Agentはカメラ許可時のみMediaPipe Pose Landmarkerを使用します。</p>
+    </section>
+  </main>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

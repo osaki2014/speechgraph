@@ -44,3 +44,8 @@ Transformers.js と `Xenova/paraphrase-multilingual-MiniLM-L12-v2` をCDN/Huggin
 4. 話者分離・感情・発話行為・質問/説明/相槌分類エージェント追加
 5. JSON/CSVログ保存
 6. POSTER_V2等の表情分析結果との時刻同期
+
+
+## NEW: 4-method comparison workbench
+
+`multi-method-compare/` では、同じ入力を4種類のマルチエージェント/ハイブリッド構成へ並列投入し、Agentごとのモデル、初期化時間、推論時間、総遅延、2次元出力を比較できます。GPT/Gemmaは安全な外部Endpointを設定するAdapter方式で、未設定時はfallbackを明示します。

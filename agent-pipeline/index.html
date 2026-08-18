@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Realtime Speech AI Pipeline — Agent Edition</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header>
+      <div>
+        <p class="eyebrow">AGENT PIPELINE EDITION</p>
+        <h1>Realtime Speech Mapper</h1>
+        <p class="lead">マイク音声 → 文字起こし → AI意味分析 → 2次元分類 → リアルタイム表示</p>
+      </div>
+      <div class="status" id="globalStatus">待機中</div>
+    </header>
+
+    <section class="toolbar panel">
+      <button id="startBtn" class="primary">録音・分析開始</button>
+      <button id="stopBtn" disabled>停止</button>
+      <button id="clearBtn">クリア</button>
+      <label>言語
+        <select id="langSelect">
+          <option value="ja-JP" selected>日本語</option>
+          <option value="en-US">English</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="agents panel">
+      <h2>Agent Pipeline</h2>
+      <div class="agent-grid">
+        <article class="agent-card" data-agent="speech"><span>1</span><b>Speech Agent</b><small>マイク・音声認識</small><i id="speechState">idle</i></article>
+        <article class="agent-card" data-agent="text"><span>2</span><b>Text Agent</b><small>文の確定・整形</small><i id="textState">idle</i></article>
+        <article class="agent-card" data-agent="semantic"><span>3</span><b>Semantic Agent</b><small>埋め込み・意味特徴抽出</small><i id="semanticState">idle</i></article>
+        <article class="agent-card" data-agent="map"><span>4</span><b>Mapping Agent</b><small>2軸への射影・分類</small><i id="mapState">idle</i></article>
+        <article class="agent-card" data-agent="viz"><span>5</span><b>Visualization Agent</b><small>グラフ更新</small><i id="vizState">idle</i></article>
+      </div>
+    </section>
+
+    <section class="workspace">
+      <article class="panel transcript-panel">
+        <h2>Transcript</h2>
+        <div id="interim" class="interim">ここに話している途中の文字が表示されます。</div>
+        <ol id="transcriptList"></ol>
+      </article>
+
+      <article class="panel chart-panel">
+        <div class="chart-head">
+          <div>
+            <h2>2D semantic map</h2>
+            <p>X: 分析的 ↔ 感情的　/　Y: 個人的 ↔ 社会・外界志向</p>
+          </div>
+          <div class="legend"><span>● 発話</span></div>
+        </div>
+        <canvas id="scatter" width="900" height="620"></canvas>
+      </article>
+    </section>
+
+    <section class="panel results-panel">
+      <h2>Latest analysis</h2>
+      <div class="result-grid">
+        <div><span>Text</span><strong id="latestText">—</strong></div>
+        <div><span>X</span><strong id="latestX">—</strong></div>
+        <div><span>Y</span><strong id="latestY">—</strong></div>
+        <div><span>Class</span><strong id="latestClass">—</strong></div>
+      </div>
+    </section>
+  </main>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

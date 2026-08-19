@@ -1,15 +1,15 @@
-import { getPipeline, softScore } from '../lib/modelHub.js';
+import { getPipeline, softScore, runInference } from '../lib/modelHub.js';
 
 function normalizeLabels(out){
   const rows=Array.isArray(out?.[0])?out[0]:out;
   const map={}; for(const r of rows||[]) map[(r.label||'').toLowerCase()]=r.score;
   return map;
 }
-export async function smallEmotionAgent(text, model='Xenova/bert-base-multilingual-uncased-sentiment') {
+export async function smallEmotionAgent(text, model='Xenova/distilbert-base-multilingual-cased-sentiments-student') {
   text=(text||'').trim() || ' ';
   try{
     const { pipe, initMs }=await getPipeline('text-classification',model,{dtype:'q8'});
-    const t0=performance.now(); const out=await pipe(text,{top_k:5});
+    const t0=performance.now(); const out=await runInference(() => pipe(text,{top_k:5}));
     const m=normalizeLabels(out); const vals=Object.values(m); const score=vals.length?Math.max(...vals):.5;
     return { value:{arousal:score,label:Object.keys(m).sort((a,b)=>m[b]-m[a])[0]||'unknown'}, initMs, inferMs:performance.now()-t0, model, status:'real' };
   }catch(e){

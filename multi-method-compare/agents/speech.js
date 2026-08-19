@@ -1,11 +1,9 @@
-import { getPipeline } from '../lib/modelHub.js';
+import { getPipeline, runInference } from '../lib/modelHub.js';
 
 export async function whisperAgent(audio, model='onnx-community/whisper-tiny') {
-  const { pipe, initMs } = await getPipeline('automatic-speech-recognition', model, { device: 'webgpu', dtype: 'q8' }).catch(async ()=>
-    getPipeline('automatic-speech-recognition', model, { dtype: 'q8' })
-  );
+  const { pipe, initMs } = await getPipeline('automatic-speech-recognition', model, { dtype: 'q8' });
   const t0 = performance.now();
-  const out = await pipe(audio, { language: 'ja', task: 'transcribe' });
+  const out = await runInference(() => pipe(audio, { language: 'ja', task: 'transcribe' }));
   return { value: out.text?.trim() || '', initMs, inferMs: performance.now()-t0, model, status:'real' };
 }
 

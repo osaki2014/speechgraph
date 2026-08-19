@@ -10,7 +10,12 @@ grid.innerHTML=METHODS.map(card).join('');
 
 function setRunning(method){
  const el=$(`#${method.id}`); el.querySelector('.total').textContent='処理中…';
- for(const row of el.querySelectorAll('.node')){row.querySelector('.time').textContent='…';row.querySelector('.model').textContent='処理待ち';}
+ for(const row of el.querySelectorAll('.node')){row.querySelector('.time').textContent='…';row.querySelector('.model').textContent='キュー待ち';}
+}
+function setProgress(methodId,nodeName,message){
+ const el=$(`#${methodId}`); if(!el) return;
+ const row=[...el.querySelectorAll('.node')].find(x=>x.dataset.node===nodeName);
+ if(row){ row.querySelector('.model').textContent=message; row.querySelector('.time').textContent='…'; }
 }
 function updateCard(method,result,total){
  const el=$(`#${method.id}`); el.querySelector('.total').textContent=`${total.toFixed(0)} ms`; el.querySelector('.out').textContent=`(${result.point.x.toFixed(2)}, ${result.point.y.toFixed(2)})`;
@@ -39,7 +44,7 @@ function takePCM(){
 
 async function runAll({audio=null,demoText=''}){
  chunkNo++; $('#chunkBadge').textContent=`chunk ${chunkNo}`;
- const ctx={audio,demoText,sharedText:sharedText||demoText,llmEndpoint:$('#llmEndpoint').value.trim(),gemmaEndpoint:$('#gemmaEndpoint').value.trim(),videoEl,whisperPromise:null};
+ const ctx={audio,demoText,sharedText:sharedText||demoText,llmEndpoint:$('#llmEndpoint').value.trim(),gemmaEndpoint:$('#gemmaEndpoint').value.trim(),videoEl,whisperPromise:null,progress:setProgress};
  const runId=`${Date.now()}-${chunkNo}`;
  METHODS.forEach(setRunning);
  const jobs=METHODS.map(async m=>{const t0=performance.now(); try{const result=await m.run(ctx); const total=performance.now()-t0; updateCard(m,result,total); appendRows(m,result,runId); return {m,result,total};}catch(e){console.error(m.id,e); const el=$(`#${m.id}`);el.querySelector('.total').textContent='ERROR';el.querySelector('.out').textContent=String(e).slice(0,100); return null;}});

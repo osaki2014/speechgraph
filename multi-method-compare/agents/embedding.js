@@ -1,10 +1,10 @@
-import { getPipeline } from '../lib/modelHub.js';
+import { getPipeline, runInference } from '../lib/modelHub.js';
 
 export async function embeddingAgent(text, model='Xenova/paraphrase-multilingual-MiniLM-L12-v2') {
   text=(text||'').trim() || ' ';
   const { pipe, initMs } = await getPipeline('feature-extraction', model, { dtype:'q8' });
   const t0=performance.now();
-  const out = await pipe(text, { pooling:'mean', normalize:true });
+  const out = await runInference(() => pipe(text, { pooling:'mean', normalize:true }));
   const data = Array.from(out.data || []);
   return { value:data, initMs, inferMs:performance.now()-t0, model, status:'real' };
 }
@@ -14,7 +14,7 @@ export async function semanticAnchorAgent(text, model='Xenova/paraphrase-multili
   const { pipe, initMs } = await getPipeline('feature-extraction', model, { dtype:'q8' });
   const anchors=['論理 分析 比較 証拠 原因','驚き 感動 喜び 面白い','自分 私 個人的 経験','社会 他者 世界 自然 環境'];
   const t0=performance.now();
-  const all=await pipe([text,...anchors],{pooling:'mean',normalize:true});
+  const all=await runInference(() => pipe([text,...anchors],{pooling:'mean',normalize:true}));
   const dim=all.dims?.at(-1)||384, arr=Array.from(all.data||[]), rows=[];
   for(let i=0;i<5;i++) rows.push(arr.slice(i*dim,(i+1)*dim));
   const cos=(a,b)=>a.reduce((s,v,i)=>s+v*b[i],0);

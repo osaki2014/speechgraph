@@ -1,6 +1,7 @@
 import { getPipeline } from '../lib/modelHub.js';
 
 export async function embeddingAgent(text, model='Xenova/paraphrase-multilingual-MiniLM-L12-v2') {
+  text=(text||'').trim() || ' ';
   const { pipe, initMs } = await getPipeline('feature-extraction', model, { dtype:'q8' });
   const t0=performance.now();
   const out = await pipe(text, { pooling:'mean', normalize:true });
@@ -9,6 +10,7 @@ export async function embeddingAgent(text, model='Xenova/paraphrase-multilingual
 }
 
 export async function semanticAnchorAgent(text, model='Xenova/paraphrase-multilingual-MiniLM-L12-v2') {
+  text=(text||'').trim() || ' ';
   const { pipe, initMs } = await getPipeline('feature-extraction', model, { dtype:'q8' });
   const anchors=['論理 分析 比較 証拠 原因','驚き 感動 喜び 面白い','自分 私 個人的 経験','社会 他者 世界 自然 環境'];
   const t0=performance.now();

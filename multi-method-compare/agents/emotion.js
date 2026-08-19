@@ -6,6 +6,7 @@ function normalizeLabels(out){
   return map;
 }
 export async function smallEmotionAgent(text, model='Xenova/bert-base-multilingual-uncased-sentiment') {
+  text=(text||'').trim() || ' ';
   try{
     const { pipe, initMs }=await getPipeline('text-classification',model,{dtype:'q8'});
     const t0=performance.now(); const out=await pipe(text,{top_k:5});

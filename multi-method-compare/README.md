@@ -46,3 +46,9 @@ Proxyは用途に応じてJSONを返します。Inquiryでは `score`、Integrat
 ## GitHub Pages
 
 `multi-method-compare/` をリポジトリに置き、Pagesを有効化してください。HTTPSが必要なマイク/カメラAPIと相性がよく、GitHub PagesのHTTPS URLから実行できます。
+
+## v1.1: microphone/Whisper reliability fix
+
+The microphone path now captures raw PCM directly with the Web Audio API and downsamples it to 16 kHz before Whisper inference. This avoids `EncodingError: Unable to decode audio data`, which can occur when MediaRecorder/WebM fragments are decoded independently. Methods 2–4 share one Whisper inference promise per chunk so the exact same transcript is used and the same model instance is not invoked concurrently. If Whisper fails or produces an empty transcript, Web Speech text is used and the Speech Agent is explicitly marked `fallback`.
+
+ONNX Runtime messages such as `VerifyEachNodeIsAssignedToAnEp` and MediaPipe/TFLite messages about XNNPACK, feedback tensors, or NORM_RECT are generally diagnostic warnings and do not by themselves indicate that the pipeline failed.

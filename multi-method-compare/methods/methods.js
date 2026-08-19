@@ -6,7 +6,18 @@ import { movementAgent } from '../agents/movement.js';
 import { visualizationAgent } from '../agents/visualization.js';
 
 const asNode=(name,r,summary='')=>({name,...r,summary});
-const demoSpeech=(text,name='Whisper')=>({value:text,initMs:0,inferMs:0,model:`${name} (demo text bypass)`,status:'fallback'});
+const demoSpeech=(text,name='Whisper')=>({value:text||'',initMs:0,inferMs:0,model:`${name} (text fallback)`,status:'fallback'});
+async function sharedWhisper(ctx){
+  if(!ctx.audio) return demoSpeech(ctx.demoText||ctx.sharedText);
+  if(!ctx.whisperPromise){
+    ctx.whisperPromise=whisperAgent(ctx.audio).then(r=>{
+      if(r.value?.trim()) return r;
+      if(ctx.sharedText?.trim()) return {...demoSpeech(ctx.sharedText,'Whisper → Web Speech'), error:'Whisper returned empty transcript'};
+      return r;
+    }).catch(e=>({...demoSpeech(ctx.sharedText||ctx.demoText,'Whisper → Web Speech'), error:String(e)}));
+  }
+  return ctx.whisperPromise;
+}
 const score=(v, fallback=.3)=>Number(v?.score ?? v?.arousal ?? fallback);
 
 export const METHODS=[
@@ -25,7 +36,7 @@ export const METHODS=[
     id:'m2', title:'2. 階層型ハイブリッド', subtitle:'Whisper → MiniLM/E5 → 小型感情Transformer → LLM → 2D',
     nodes:['Speech Agent','Meaning Agent','Emotion Agent','Science Inquiry LLM Agent','Visualization Agent'],
     async run(ctx){
-      const nodes=[]; const speech=ctx.audio?await whisperAgent(ctx.audio):demoSpeech(ctx.demoText); nodes.push(asNode('Speech Agent',speech,speech.value));
+      const nodes=[]; const speech=await sharedWhisper(ctx); nodes.push(asNode('Speech Agent',speech,speech.value));
       const [emb,emo]=await Promise.all([embeddingAgent(speech.value),smallEmotionAgent(speech.value)]);
       nodes.push(asNode('Meaning Agent',emb,`${emb.value.length}D embedding`)); nodes.push(asNode('Emotion Agent',emo,`${emo.value.label} / ${score(emo.value).toFixed(2)}`));
       const science=await scienceLLMAgent(speech.value,ctx.llmEndpoint,'scientific-inquiry'); nodes.push(asNode('Science Inquiry LLM Agent',science,science.value.explanation||`score=${score(science.value).toFixed(2)}`));
@@ -39,7 +50,7 @@ export const METHODS=[
     id:'m3', title:'3. 機能分担マルチエージェント', subtitle:'Whisper + Emotion Transformer + Inquiry LLM + MediaPipe',
     nodes:['Speech Agent','Emotion Agent','Inquiry Agent','Movement Agent','Visualization Agent'],
     async run(ctx){
-      const nodes=[]; const speech=ctx.audio?await whisperAgent(ctx.audio):demoSpeech(ctx.demoText); nodes.push(asNode('Speech Agent',speech,speech.value));
+      const nodes=[]; const speech=await sharedWhisper(ctx); nodes.push(asNode('Speech Agent',speech,speech.value));
       const [emo,inq,mov]=await Promise.all([smallEmotionAgent(speech.value),inquiryLLMAgent(speech.value,ctx.llmEndpoint),movementAgent(ctx.videoEl)]);
       nodes.push(asNode('Emotion Agent',emo,`${emo.value.label} / ${score(emo.value).toFixed(2)}`)); nodes.push(asNode('Inquiry Agent',inq,`score=${score(inq.value).toFixed(2)}`)); nodes.push(asNode('Movement Agent',mov,`activity=${Number(mov.value.activity||0).toFixed(2)}`));
       const x=Math.max(-1,Math.min(1,2*score(inq.value)-1));
@@ -52,7 +63,7 @@ export const METHODS=[
     id:'m4', title:'4. 異種モデル統合マルチエージェント', subtitle:'Whisper → RoBERTa + GPT + Gemma + BGE/E5 → GPT統合',
     nodes:['Speech Agent','Emotion Agent','Inquiry Agent','Science Concept Agent','Embedding Agent','Integration Agent','Visualization Agent'],
     async run(ctx){
-      const nodes=[]; const speech=ctx.audio?await whisperAgent(ctx.audio):demoSpeech(ctx.demoText); nodes.push(asNode('Speech Agent',speech,speech.value));
+      const nodes=[]; const speech=await sharedWhisper(ctx); nodes.push(asNode('Speech Agent',speech,speech.value));
       const [emo,inq,sci,emb]=await Promise.all([
         robertaEmotionAgent(speech.value), inquiryLLMAgent(speech.value,ctx.llmEndpoint), gemmaAgent(speech.value,ctx.gemmaEndpoint), embeddingAgent(speech.value,'Xenova/multilingual-e5-small')
       ]);
